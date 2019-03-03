@@ -19,6 +19,8 @@ import torch
 from torch import optim
 from logging import getLogger
 
+import pandas as pd
+
 from .logger import create_logger
 from .dictionary import Dictionary
 
@@ -269,8 +271,8 @@ def read_txt_embeddings(params, source, full_vocab):
     vectors = []
 
     # load pretrained embeddings
-    lang = params.src_lang if source else params.tgt_lang
-    emb_path = params.src_emb if source else params.tgt_emb
+    lang = {'src': params.src_lang, 'tgt': params.tgt_lang, 'aux': params.aux_lang}[source]
+    emb_path = {'src': params.src_emb, 'tgt': params.tgt_emb, 'aux': params.aux_emb}[source]
     _emb_dim_file = params.emb_dim
     with io.open(emb_path, 'r', encoding='utf-8', newline='\n', errors='ignore') as f:
         for i, line in enumerate(f):
@@ -338,8 +340,8 @@ def load_pth_embeddings(params, source, full_vocab):
     Reload pretrained embeddings from a PyTorch binary file.
     """
     # reload PyTorch binary file
-    lang = params.src_lang if source else params.tgt_lang
-    data = torch.load(params.src_emb if source else params.tgt_emb)
+    lang = {'src': params.src_lang, 'tgt': params.tgt_lang, 'aux': params.aux_lang}[source]
+    data = torch.load({'src': params.src_emb, 'tgt': params.tgt_emb, 'aux': params.aux_emb}[source])
     dico = data['dico']
     embeddings = data['vectors']
     assert dico.lang == lang
@@ -362,8 +364,8 @@ def load_bin_embeddings(params, source, full_vocab):
     Reload pretrained embeddings from a fastText binary file.
     """
     # reload fastText binary file
-    lang = params.src_lang if source else params.tgt_lang
-    model = load_fasttext_model(params.src_emb if source else params.tgt_emb)
+    lang = {'src': params.src_lang, 'tgt': params.tgt_lang, 'aux': params.aux_lang}[source]
+    model = load_fasttext_model({'src': params.src_emb, 'tgt': params.tgt_emb, 'aux': params.aux_emb}[source])
     words = model.get_labels()
     assert model.get_dimension() == params.emb_dim
     logger.info("Loaded binary model. Generating embeddings ...")
@@ -396,8 +398,8 @@ def load_embeddings(params, source, full_vocab=False):
     - `full_vocab == True` means that we load the entire embedding text file,
       before we export the embeddings at the end of the experiment.
     """
-    assert type(source) is bool and type(full_vocab) is bool
-    emb_path = params.src_emb if source else params.tgt_emb
+    assert type(source) is str and type(full_vocab) is bool
+    emb_path = {'src': params.src_emb, 'tgt': params.tgt_emb, 'aux': params.aux_emb}[source]
     if emb_path.endswith('.pth'):
         return load_pth_embeddings(params, source, full_vocab)
     if emb_path.endswith('.bin'):
@@ -455,3 +457,47 @@ def export_embeddings(src_emb, tgt_emb, params):
         torch.save({'dico': params.src_dico, 'vectors': src_emb}, src_path)
         logger.info('Writing target embeddings to %s ...' % tgt_path)
         torch.save({'dico': params.tgt_dico, 'vectors': tgt_emb}, tgt_path)
+
+
+
+from .evaluation.word_translation import DIC_EVAL_PATH, load_dictionary
+
+
+def create_multilingual_dictionary(languages, word2ids):
+    filename = '{0}-{1}.0-5000.txt'.format(languages[0], languages[1])
+    dico = load_dictionary(
+        os.path.join(DIC_EVAL_PATH, filename),
+        word2ids[0], word2ids[1]
+    )
+    if len(languages) == 2:
+        pass
+    elif len(languages) == 3:
+        dico_01 = dico
+
+        # TODO: Currently only taking into account 2 dictionaries, we have up to 6 possible ones
+        # filename = '{1}-{0}.0-5000.txt'.format(languages[0], languages[1])
+        # dico_10 = load_dictionary(
+        #     os.path.join(DIC_EVAL_PATH, filename),
+        #     word2ids[1], word2ids[0]
+        # )
+        filename = '{0}-{1}.0-5000.txt'.format(languages[1], languages[2])
+        dico_12 = load_dictionary(
+            os.path.join(DIC_EVAL_PATH, filename),
+            word2ids[1], word2ids[2]
+        )
+        dico_01_np = dico_01.numpy()
+        dico_12_np = dico_12.numpy()
+
+        df_01 = pd.DataFrame(dico_01_np)
+        df_12 = pd.DataFrame(dico_12_np)
+
+        df_01.columns = ['source', 'target']
+        df_12.columns = ['target', 'auxiliary']
+
+        result = df_01.merge(df_12)
+
+        dico = result.values
+    else:
+        raise NotImplemented("Expert dictionaries with 4 or more languages not implemented")
+    print("Length of resulting dictionary: {0}".format(len(dico)))
+    return dico

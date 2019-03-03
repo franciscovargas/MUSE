@@ -20,23 +20,39 @@ DIC_EVAL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 logger = getLogger()
 
 
-def load_identical_char_dico(word2id1, word2id2):
+def load_identical_char_dico(word2id1, word2id2, word2id_aux):
     """
     Build a dictionary of identical character strings.
     """
-    pairs = [(w1, w1) for w1 in word2id1.keys() if w1 in word2id2]
-    if len(pairs) == 0:
-        raise Exception("No identical character strings were found. "
-                        "Please specify a dictionary.")
+    if word2id_aux == None:
+        pairs = [(w1, w1) for w1 in word2id1.keys() if w1 in word2id2]
+        if len(pairs) == 0:
+            raise Exception("No identical character strings were found. "
+                            "Please specify a dictionary.")
 
-    logger.info("Found %i pairs of identical character strings." % len(pairs))
+        logger.info("Found %i pairs of identical character strings." % len(pairs))
 
-    # sort the dictionary by source word frequencies
-    pairs = sorted(pairs, key=lambda x: word2id1[x[0]])
-    dico = torch.LongTensor(len(pairs), 2)
-    for i, (word1, word2) in enumerate(pairs):
-        dico[i, 0] = word2id1[word1]
-        dico[i, 1] = word2id2[word2]
+        # sort the dictionary by source word frequencies
+        pairs = sorted(pairs, key=lambda x: word2id1[x[0]])
+        dico = torch.LongTensor(len(pairs), 2)
+        for i, (word1, word2) in enumerate(pairs):
+            dico[i, 0] = word2id1[word1]
+            dico[i, 1] = word2id2[word2]
+    else:
+        triples = [(w1, w1, w1) for w1 in word2id1.keys() if w1 in word2id2 and w1 in word2id_aux]
+        if len(triples) == 0:
+            raise Exception("No identical character strings were found. "
+                            "Please specify a dictionary.")
+
+        logger.info("Found %i pairs of identical character strings." % len(triples))
+
+        # sort the dictionary by source word frequencies
+        pairs = sorted(triples, key=lambda x: word2id1[x[0]])
+        dico = torch.LongTensor(len(pairs), 3)
+        for i, (word1, word2, word3) in enumerate(triples):
+            dico[i, 0] = word2id1[word1]
+            dico[i, 1] = word2id2[word2]
+            dico[i, 2] = word2id_aux[word3]
 
     return dico
 
@@ -89,7 +105,10 @@ def get_word_translation_accuracy(lang1, word2id1, emb1, lang2, word2id2, emb2, 
         path = os.path.join(DIC_EVAL_PATH, '%s-%s.5000-6500.txt' % (lang1, lang2))
     else:
         path = dico_eval
-    dico = load_dictionary(path, word2id1, word2id2)
+    try:
+        dico = load_dictionary(path, word2id1, word2id2)
+    except:
+        return [('no dictionary', -1)]
     dico = dico.cuda() if emb1.is_cuda else dico
 
     assert dico[:, 0].max() < emb1.size(0)

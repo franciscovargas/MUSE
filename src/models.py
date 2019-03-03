@@ -43,19 +43,28 @@ def build_model(params, with_dis):
     Build all components of the model.
     """
     # source embeddings
-    src_dico, _src_emb = load_embeddings(params, source=True)
+    src_dico, _src_emb = load_embeddings(params, source='src')
     params.src_dico = src_dico
     src_emb = nn.Embedding(len(src_dico), params.emb_dim, sparse=True)
     src_emb.weight.data.copy_(_src_emb)
 
     # target embeddings
     if params.tgt_lang:
-        tgt_dico, _tgt_emb = load_embeddings(params, source=False)
+        tgt_dico, _tgt_emb = load_embeddings(params, source='tgt')
         params.tgt_dico = tgt_dico
         tgt_emb = nn.Embedding(len(tgt_dico), params.emb_dim, sparse=True)
         tgt_emb.weight.data.copy_(_tgt_emb)
     else:
         tgt_emb = None
+
+    # auxiliary embeddings
+    if params.aux_lang:
+        aux_dico, _aux_emb = load_embeddings(params, source='aux')
+        params.aux_dico = aux_dico
+        aux_emb = nn.Embedding(len(aux_dico), params.emb_dim, sparse=True)
+        aux_emb.weight.data.copy_(_aux_emb)
+    else:
+        aux_emb = None
 
     # mapping
     mapping = nn.Linear(params.emb_dim, params.emb_dim, bias=False)
@@ -78,5 +87,7 @@ def build_model(params, with_dis):
     params.src_mean = normalize_embeddings(src_emb.weight.data, params.normalize_embeddings)
     if params.tgt_lang:
         params.tgt_mean = normalize_embeddings(tgt_emb.weight.data, params.normalize_embeddings)
+    if params.aux_lang:
+        params.aux_mean = normalize_embeddings(aux_emb.weight.data, params.normalize_embeddings)
 
-    return src_emb, tgt_emb, mapping, discriminator
+    return src_emb, tgt_emb, aux_emb, mapping, discriminator

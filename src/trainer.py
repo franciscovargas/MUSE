@@ -15,8 +15,11 @@ from torch.nn import functional as F
 
 from .utils import get_optimizer, load_embeddings, normalize_embeddings, export_embeddings
 from .utils import clip_parameters
+from .utils import create_multilingual_dictionary
 from .dico_builder import build_dictionary
-from .evaluation.word_translation import DIC_EVAL_PATH, load_identical_char_dico, load_dictionary
+from .evaluation.word_translation import load_identical_char_dico, load_dictionary
+
+from .alignment_functions import guess_for_closed_form_fa, em_multi_fa
 
 
 logger = getLogger()
@@ -24,17 +27,20 @@ logger = getLogger()
 
 class Trainer(object):
 
-    def __init__(self, src_emb, tgt_emb, mapping, discriminator, params):
+    def __init__(self, src_emb, tgt_emb, aux_emb, mapping, discriminator, params):
         """
         Initialize trainer script.
         """
         self.src_emb = src_emb
         self.tgt_emb = tgt_emb
+        self.aux_emb = aux_emb
         self.src_dico = params.src_dico
         self.tgt_dico = getattr(params, 'tgt_dico', None)
+        self.aux_dico = getattr(params, 'aux_dico', None)
         self.mapping = mapping
         self.discriminator = discriminator
         self.params = params
+        self.cca_params = None
 
         # optimizers
         if hasattr(params, 'map_optimizer'):
@@ -137,19 +143,20 @@ class Trainer(object):
         """
         word2id1 = self.src_dico.word2id
         word2id2 = self.tgt_dico.word2id
+        word2id_aux = self.aux_dico.word2id if self.aux_dico else None
 
         # identical character strings
         if dico_train == "identical_char":
-            self.dico = load_identical_char_dico(word2id1, word2id2)
+            self.dico = load_identical_char_dico(word2id1, word2id2, word2id_aux)
         # use one of the provided dictionary
         elif dico_train == "default":
-            filename = '%s-%s.0-5000.txt' % (self.params.src_lang, self.params.tgt_lang)
-            self.dico = load_dictionary(
-                os.path.join(DIC_EVAL_PATH, filename),
-                word2id1, word2id2
-            )
+            languages = [x for x in [self.params.src_lang, self.params.tgt_lang, self.params.aux_lang] if x is not '']
+            word2ids = [x for x in [word2id1, word2id2, word2id_aux] if x is not None]
+            self.dico = create_multilingual_dictionary(languages, word2ids)
         # dictionary provided by the user
         else:
+            if word2id_aux is not None:
+                raise NotImplemented("Providing a dictionary is currently not implemented")
             self.dico = load_dictionary(dico_train, word2id1, word2id2)
 
         # cuda
@@ -173,10 +180,37 @@ class Trainer(object):
         """
         A = self.src_emb.weight.data[self.dico[:, 0]]
         B = self.tgt_emb.weight.data[self.dico[:, 1]]
+
         W = self.mapping.weight.data
         M = B.transpose(0, 1).mm(A).cpu().numpy()
         U, S, V_t = scipy.linalg.svd(M, full_matrices=True)
         W.copy_(torch.from_numpy(U.dot(V_t)).type_as(W))
+
+    def fit(self, fitting_method):
+        A = self.src_emb.weight.data[self.dico[:, 0]]
+        B = self.tgt_emb.weight.data[self.dico[:, 1]]
+
+        A = A.numpy()
+        B = B.numpy()
+
+        print(fitting_method)
+
+        if self.aux_emb:
+            C = self.aux_emb.weight.data[self.dico[:, 2]]
+            C = C.numpy()
+            views = [A, B, C]
+        else:
+            views = [A, B]
+
+        if fitting_method == 'non_iterative':
+            Ws, Psis, mus = guess_for_closed_form_fa(views)
+        elif fitting_method == 'em':
+            iterations = 1000
+            Ws, Psis, mus = em_multi_fa(views, iterations=iterations, initialise_at_guess=len(views)>2)
+        else:
+            raise NotImplemented("No such method {0}".format(fitting_method))
+
+        self.cca_params = (Ws, Psis, mus)
 
     def orthogonalize(self):
         """
