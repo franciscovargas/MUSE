@@ -1,11 +1,6 @@
-## MUSE: Multilingual Unsupervised and Supervised Embeddings
-![Model](./outline_all.png)
+## Submission <> for ACL Conference (Fork of MUSE repository to reproduce experiments for submission)
 
-MUSE is a Python library for *multilingual word embeddings*, whose goal is to provide the community with:
-* state-of-the-art multilingual word embeddings ([fastText](https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md) embeddings aligned in a common space)
-* large-scale high-quality bilingual dictionaries for training and evaluation
-
-We include two methods, one *supervised* that uses a bilingual dictionary or identical character strings, and one *unsupervised* that does not use any parallel data (see [Word Translation without Parallel Data](https://arxiv.org/pdf/1710.04087.pdf) for more details).
+This is a fork of the MUSE repo with some small changes to reproduce experiments of paper <> submitted to ACL 2019. Both MUSE dataset results and DINU 2014 can be reproduced with this repository.
 
 ## Dependencies
 * Python 2/3 with [NumPy](http://www.numpy.org/)/[SciPy](https://www.scipy.org/)
