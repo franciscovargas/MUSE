@@ -22,6 +22,18 @@ python create_embeddings.py
 ```
 to create aligned en-es embeddings, which can then be used to reproduce the corresponding rows in Tables 4 and 5. This will also generate a `samples_en_es.txt` file that contains the sampled pairs of words in Table 8.
 
+Run
+```
+python supervised_multiview.py --cuda 0 --src_lang en --tgt_lang it --src_emb data/wiki.en.vec --tgt_emb data/wiki.it.vec 
+```
+to reproduce the IBFA results in Table 6.
+
+Run
+```
+python supervised_multiview.py --cuda 0 --src_lang en --tgt_lang fr --aux_lang it --src_emb data/wiki.en.vec --tgt_emb data/wiki.fr.vec --aux_emb data/wiki.it.vec --fitting_method em
+```
+to reproduce the MBFA results in Table 7.
+
 ### Everything below this line is from the original MUSE repository
 
 ## Dependencies
