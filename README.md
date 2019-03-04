@@ -2,9 +2,25 @@
 
 This is a fork of the MUSE repository with changes to reproduce experiments of paper <1022> submitted to ACL 2019. Both MUSE dataset results and DINU 2014 can be reproduced with this repository.
 
-The file containing the implementation of the methods in the paper (IBFA and MBFA) is `alignment_functions.py`, everything else is to reproduce experimental results. After installing the prerequisites and downloading the relevant embeddings and dictionaries,
+The file containing the implementation of the methods in the paper (IBFA and MBFA) is `alignment_functions.py`, everything else is to reproduce experimental results.
 
-Run
+## Dependencies
+* Python 3 with [NumPy](http://www.numpy.org/) and [SciPy](https://www.scipy.org/)
+* Pandas and scikit-learn
+* [PyTorch](http://pytorch.org/)
+* [Faiss](https://github.com/facebookresearch/faiss) (recommended) for fast nearest neighbor search (CPU or GPU).
+
+Faiss is *optional* for GPU users - though Faiss-GPU will greatly speed up nearest neighbor search - and *highly recommended* for CPU users.
+
+The changes for the ACL submission require Python3 - we recommend using Python3.6 with a virtual environment.
+After cloning the repository, the following steps should be enough to set up the dependencies:
+1. Make the environment: `python -m venv env`
+2. Activate it: `source env/bin/activate`
+3. Install required modules: `pip install -r requirements.txt`
+4. Download evaluation datasets and all relevant monolingual word embeddings (refer to the original MUSE instructions below)
+5. Download the Dinu et al. (2014) embeddings and dictionary from http://clic.cimec.unitn.it/~georgiana.dinu/down/. 
+
+After installing the prerequisites and downloading the relevant embeddings and dictionaries, run:
 ```
 python supervised_multiview.py --cuda 0 --src_lang en --tgt_lang es --src_emb data/wiki.en.vec --tgt_emb data/wiki.es.vec 
 ```
@@ -14,7 +30,7 @@ Run
 ```
 python multilingual_alignment_experiments.py 
 ```
-to reproduce the en-it IBFA row in Table 2. You will need the embeddings and dictionary from http://clic.cimec.unitn.it/~georgiana.dinu/down/. The `--swap` and `--expert` arguments will allow you to reproduce all results for IBFA in Tables 2 and 3.
+to reproduce the en-it IBFA row in Table 2. The `--swap` and `--expert` arguments will allow you to reproduce all results for IBFA in Tables 2 and 3.
 
 Run
 ```
@@ -34,12 +50,6 @@ python supervised_multiview.py --cuda 0 --src_lang en --tgt_lang fr --aux_lang i
 ```
 to reproduce the MBFA results in Table 7.
 
-## Dependencies
-* Python 3 with [NumPy](http://www.numpy.org/)/[SciPy](https://www.scipy.org/)
-* [PyTorch](http://pytorch.org/)
-* [Faiss](https://github.com/facebookresearch/faiss) (recommended) for fast nearest neighbor search (CPU or GPU).
-
-MUSE is available on CPU or GPU, in Python 2 or 3. **Important**: The changes for the ACL submission have made the repository only supports Python 3. Faiss is *optional* for GPU users - though Faiss-GPU will greatly speed up nearest neighbor search - and *highly recommended* for CPU users. Faiss can be installed using "conda install faiss-cpu -c pytorch" or "conda install faiss-gpu -c pytorch".
 
 # Everything below this line is from the original MUSE repository
 
