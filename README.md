@@ -14,7 +14,7 @@ Run
 ```
 python multilingual_alignment_experiments.py 
 ```
-to reproduce the IBFA row in Table 2.
+to reproduce the en-it IBFA row in Table 2. The `--swap` and `--expert` arguments will allow you to reproduce all results for IBFA in Tables 2 and 3.
 
 Run
 ```
