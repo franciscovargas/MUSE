@@ -73,6 +73,8 @@ def em_multi_fa(view_list, iterations=100, latent_dim=None, debug=False, initial
                                      views
     :param iterations[int]: integer number of iterations
     :param latent_dim[int]: dimensionality of latent space z
+    :param debug[bool]: Flag for displaying loss curve
+    :param initialise_at_guess[bool]: Flag for initialising at the approximation from Browne
     :returns [list[ndarray]]: Linear transformations
                               from latent space to view
     """
@@ -144,8 +146,6 @@ def em_multi_fa(view_list, iterations=100, latent_dim=None, debug=False, initial
         if i % (iterations // 10) == 0:
             print(loss)
 
-        # print(loss)
-
         W = W_new
 
         Psi = Psi_new
@@ -193,7 +193,7 @@ def pcca(Sigma, latent_dim, n, return_components=False):
 
     P_sqrt = np.diag(np.sqrt(L))
 
-    # # Assuming identity rotation
+    # Assuming identity rotation
     W1_opt = Sigma_11.dot(U1).dot(P_sqrt)
     W2_opt = Sigma_22.dot(U2).dot(P_sqrt)
 
@@ -219,7 +219,6 @@ def guess_for_closed_form_fa(view_list, latent_dim=None, debug=False, return_com
                             e_i ~ N(mu_i, Psi_i)
     :param view_list[list[ndarray]]: contains design matrices from multiple
                                      views
-    :param iterations[int]: integer number of iterations
     :param latent_dim[int]: dimensionality of latent space z
     :returns [list[ndarray]]: Linear transformations
                               from latent space to view
@@ -253,7 +252,9 @@ def guess_for_closed_form_fa(view_list, latent_dim=None, debug=False, return_com
 def to_latent(X, W_x, Psi_x, mu_x):
     """
     :param X[ndarray]: Design matrix for a single view
-    :param Wx[ndarray]: View generation matrix from latent (for a single view)
+    :param W_x[ndarray]: View generation matrix from latent (for a single view)
+    :param Psi_x[ndarray]: Emission noise covariance (for a single view)
+    :param mu_x[ndarray]: View mean (for a single view)
     :return Z[ndarray]:  E[Z | X, Wx] Latent embedding design matrix
     """
 

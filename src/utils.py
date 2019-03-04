@@ -16,6 +16,7 @@ import argparse
 import subprocess
 import numpy as np
 import torch
+import itertools
 from torch import optim
 from logging import getLogger
 
@@ -23,6 +24,7 @@ import pandas as pd
 
 from .logger import create_logger
 from .dictionary import Dictionary
+from .evaluation.word_translation import DIC_EVAL_PATH, load_dictionary
 
 
 MAIN_DUMP_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'dumped')
@@ -459,42 +461,44 @@ def export_embeddings(src_emb, tgt_emb, params):
         torch.save({'dico': params.tgt_dico, 'vectors': tgt_emb}, tgt_path)
 
 
-
-from .evaluation.word_translation import DIC_EVAL_PATH, load_dictionary
-
-
-def create_multilingual_dictionary(languages, word2ids):
-    filename = '{0}-{1}.0-5000.txt'.format(languages[0], languages[1])
-    dico = load_dictionary(
-        os.path.join(DIC_EVAL_PATH, filename),
-        word2ids[0], word2ids[1]
-    )
+def create_multilingual_dictionary(languages, word2ids, full_merge=True):
+    # 2 languages: just load the pairwise dict
     if len(languages) == 2:
-        pass
-    elif len(languages) == 3:
-        dico_01 = dico
-
-        # TODO: Currently only taking into account 2 dictionaries, we have up to 6 possible ones
-        # filename = '{1}-{0}.0-5000.txt'.format(languages[0], languages[1])
-        # dico_10 = load_dictionary(
-        #     os.path.join(DIC_EVAL_PATH, filename),
-        #     word2ids[1], word2ids[0]
-        # )
-        filename = '{0}-{1}.0-5000.txt'.format(languages[1], languages[2])
-        dico_12 = load_dictionary(
+        filename = '{0}-{1}.0-5000.txt'.format(languages[0], languages[1])
+        dico = load_dictionary(
             os.path.join(DIC_EVAL_PATH, filename),
-            word2ids[1], word2ids[2]
+            word2ids[0], word2ids[1]
         )
-        dico_01_np = dico_01.numpy()
-        dico_12_np = dico_12.numpy()
+    # 3 languages - we need to combine dicts
+    elif len(languages) == 3:
+        dictionaries = {0: {}, 1: {}, 2: {}}
+        labels = ['source', 'target', 'auxiliary']
+        if full_merge:
+            # If we want to do a full merge, load all possible combinations of languages
+            dicts_to_load = itertools.permutations((0, 1, 2), 2)
+        else:
+            # Otherwise just load source to target and target to auxiliary
+            dicts_to_load = ((0, 1), (1, 2))
+        # Actually load the dictionaries from disc and convert to Pandas dicts
+        for i in dicts_to_load:
+            filename = '{0}-{1}.0-5000.txt'.format(languages[i[0]], languages[i[1]])
+            dictionary = load_dictionary(os.path.join(DIC_EVAL_PATH, filename),
+                                                       word2ids[i[0]], word2ids[i[1]])
+            pd_dict = pd.DataFrame(dictionary.numpy())
+            pd_dict.columns = [labels[i[0]], labels[i[1]]]
+            dictionaries[i[0]][i[1]] = pd_dict
 
-        df_01 = pd.DataFrame(dico_01_np)
-        df_12 = pd.DataFrame(dico_12_np)
-
-        df_01.columns = ['source', 'target']
-        df_12.columns = ['target', 'auxiliary']
-
-        result = df_01.merge(df_12)
+        # Do the merging
+        if full_merge:
+            result = dictionaries[0][1]\
+                .merge(dictionaries[1][0])\
+                .merge(dictionaries[1][2]) \
+                .merge(dictionaries[2][1]) \
+                .merge(dictionaries[0][2]) \
+                .merge(dictionaries[2][0])
+        else:
+            result = dictionaries[0][1]\
+                .merge(dictionaries[1][2])
 
         dico = result.values
     else:
