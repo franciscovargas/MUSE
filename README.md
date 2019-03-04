@@ -1,6 +1,6 @@
-## Submission <> for ACL Conference (Fork of MUSE repository to reproduce experiments for submission)
+## Submission <1022> for ACL Conference (Fork of MUSE repository to reproduce experiments for submission)
 
-This is a fork of the MUSE repository with changes to reproduce experiments of paper <> submitted to ACL 2019. Both MUSE dataset results and DINU 2014 can be reproduced with this repository.
+This is a fork of the MUSE repository with changes to reproduce experiments of paper <1022> submitted to ACL 2019. Both MUSE dataset results and DINU 2014 can be reproduced with this repository.
 
 The file containing the implementation of the methods in the paper (IBFA and MBFA) is `alignment_functions.py`, everything else is to reproduce experimental results. After installing the prerequisites and downloading the relevant embeddings and dictionaries,
 
