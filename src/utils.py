@@ -24,7 +24,6 @@ import pandas as pd
 
 from .logger import create_logger
 from .dictionary import Dictionary
-from .evaluation.word_translation import DIC_EVAL_PATH, load_dictionary
 
 
 MAIN_DUMP_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'dumped')
@@ -459,6 +458,9 @@ def export_embeddings(src_emb, tgt_emb, params):
         torch.save({'dico': params.src_dico, 'vectors': src_emb}, src_path)
         logger.info('Writing target embeddings to %s ...' % tgt_path)
         torch.save({'dico': params.tgt_dico, 'vectors': tgt_emb}, tgt_path)
+
+
+from .evaluation.word_translation import DIC_EVAL_PATH, load_dictionary
 
 
 def create_multilingual_dictionary(languages, word2ids, full_merge=True):
