@@ -1,6 +1,28 @@
 ## Submission <> for ACL Conference (Fork of MUSE repository to reproduce experiments for submission)
 
-This is a fork of the MUSE repo with some small changes to reproduce experiments of paper <> submitted to ACL 2019. Both MUSE dataset results and DINU 2014 can be reproduced with this repository.
+This is a fork of the MUSE repository with changes to reproduce experiments of paper <> submitted to ACL 2019. Both MUSE dataset results and DINU 2014 can be reproduced with this repository.
+
+The file containing the implementation of the methods in the paper (IBFA and MBFA) is `alignment_functions.py`, everything else is to reproduce experimental results. After downloading the relevant embeddings and dictionaries,
+
+Run
+```
+python supervised_multiview.py --cuda 0 --src_lang en --tgt_lang es --src_emb data/wiki.en.vec --tgt_emb data/wiki.es.vec 
+```
+to reproduce the IBFA row (for en-es) in Table 1.
+
+Run
+```
+python multilingual_alignment_experiments.py 
+```
+to reproduce the IBFA row in Table 2.
+
+Run
+```
+python create_embeddings.py
+```
+to create aligned en-es embeddings, which can then be used to reproduce the corresponding rows in Tables 4 and 5. This will also generate a `samples_en_es.txt` file that contains the sampled pairs of words in Table 8.
+
+### Everything below this line is from the original MUSE repository
 
 ## Dependencies
 * Python 2/3 with [NumPy](http://www.numpy.org/)/[SciPy](https://www.scipy.org/)
