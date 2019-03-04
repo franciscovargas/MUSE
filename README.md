@@ -34,14 +34,14 @@ python supervised_multiview.py --cuda 0 --src_lang en --tgt_lang fr --aux_lang i
 ```
 to reproduce the MBFA results in Table 7.
 
-### Everything below this line is from the original MUSE repository
-
 ## Dependencies
-* Python 2/3 with [NumPy](http://www.numpy.org/)/[SciPy](https://www.scipy.org/)
+* Python 3 with [NumPy](http://www.numpy.org/)/[SciPy](https://www.scipy.org/)
 * [PyTorch](http://pytorch.org/)
 * [Faiss](https://github.com/facebookresearch/faiss) (recommended) for fast nearest neighbor search (CPU or GPU).
 
 MUSE is available on CPU or GPU, in Python 2 or 3. Faiss is *optional* for GPU users - though Faiss-GPU will greatly speed up nearest neighbor search - and *highly recommended* for CPU users. Faiss can be installed using "conda install faiss-cpu -c pytorch" or "conda install faiss-gpu -c pytorch".
+
+# Everything below this line is from the original MUSE repository
 
 ## Get evaluation datasets
 To download monolingual and cross-lingual word embeddings evaluation datasets:
