@@ -2,7 +2,7 @@
 
 This is a fork of the MUSE repository with changes to reproduce experiments of paper <1022> submitted to ACL 2019. Both MUSE dataset results and DINU 2014 can be reproduced with this repository.
 
-The file containing the implementation of the methods in the paper (IBFA and MBFA) is `alignment_functions.py`, everything else is to reproduce experimental results.
+The file containing the implementation of the methods in the paper (IBFA and MBFA) is `alignment_functions.py`, the function that builds the dictionary of triples is at the bottom of `utils.py`, everything else is to reproduce experimental results.
 
 ## Dependencies
 * Python 3 with [NumPy](http://www.numpy.org/) and [SciPy](https://www.scipy.org/)
