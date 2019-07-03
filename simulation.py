@@ -25,7 +25,7 @@ def main():
     ### ND DATA
     D = 2
     VAL = 1000
-    TRN = 1000000
+    TRN = 100000
     T = TRN
     N = VAL + TRN
 
